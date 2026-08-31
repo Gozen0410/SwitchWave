@@ -50,4 +50,5 @@ RUN wget -qO- https://github.com/sahlberg/libnfs/archive/refs/tags/libnfs-5.0.2.
     && make && make install \
     && rm -rf /tmp/libnfs-libnfs-5.0.2 /tmp/libnfs-switch.patch
 
+# Trigger CI after enabling GitHub Actions
 WORKDIR /mnt
