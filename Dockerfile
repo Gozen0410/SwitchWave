@@ -25,19 +25,19 @@ RUN if [ "$GIMP_VERSION" = "3" ]; then \
 ENV DEVKITPRO=/opt/devkitpro
 ENV PORTLIBS_PREFIX=${DEVKITPRO}/portlibs/switch
 
-# libusbhsfs 0.2.10 GPL builds require the official devkitPro filesystem portlibs.
+# libusbhsfs GPL builds require the official devkitPro filesystem portlibs.
 RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
 
-# Build libusbhsfs (GPL)
-# v0.2.10 has a release-build warning with GCC 16: max_burst is only consumed
-# by the debug logging macro, so GCC reports it as unused-but-set in release mode.
-# Keep the upstream code intact and explicitly mark the value as intentionally
-# unused when logging is compiled out.
-RUN git clone --depth 1 --branch v0.2.10 https://github.com/DarkMatterCore/libusbhsfs.git /tmp/libusbhsfs \
+# Build libusbhsfs from the user's fork/main. This is the latest code they forked,
+# including the post-0.2.10 NTFS path-normalization fix.
+# Build GPL explicitly: this enables the NTFS and EXT source trees.
+RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
-    && sed -i '/max_burst++;/a\        (void)max_burst;' source/usbhsfs_drive.c \
     && source ${DEVKITPRO}/switchvars.sh \
-    && make BUILD_TYPE=gpl install \
+    && make clean \
+    && make BUILD_TYPE=GPL \
+    && test -n "$(nm -g lib/libusbhsfs.a | grep -E 'ntfs(dev)?_|ntfs_')" \
+    && make BUILD_TYPE=GPL install \
     && rm -rf /tmp/libusbhsfs
 
 # Build libsmb2
