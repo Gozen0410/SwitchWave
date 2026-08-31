@@ -26,16 +26,17 @@ ENV PORTLIBS_PREFIX=${DEVKITPRO}/portlibs/switch
 
 RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
 
-# Build the user's libusbhsfs fork with GPL support. Patch only the GCC-16
-# release-build warning in upstream source; do not alter runtime behavior.
+# Build the user's libusbhsfs fork with GPL support. Apply the small GCC-16
+# compatibility fix from the build environment to upstream v0.2.10 code.
 RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
-    && sed -i '/max_burst++;$/a\\        (void)max_burst;' source/usbhsfs_drive.c \
+    && sed -i '/max_burst++;/s/^[[:space:]]*//' source/usbhsfs_drive.c \
+    && sed -i '/max_burst++;/a\        (void)max_burst;' source/usbhsfs_drive.c \
     && source ${DEVKITPRO}/switchvars.sh \
     && make clean \
     && make BUILD_TYPE=GPL \
     && test -s lib/libusbhsfs.a \
-    && ar t lib/libusbhsfs.a | grep -q '^ntfs.*\\.o$' \
+    && ar t lib/libusbhsfs.a | grep -Eq '^(ntfs(_dev|_disk_io)?|ext(_dev|_disk_io)?)\\.o$' \
     && make BUILD_TYPE=GPL install \
     && rm -rf /tmp/libusbhsfs
 
