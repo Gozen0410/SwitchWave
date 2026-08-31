@@ -4,7 +4,6 @@ SHELL ["/bin/bash", "-c"]
 
 ARG GIMP_VERSION=2
 
-# Build tools + GIMP (for BCn texture conversion)
 RUN if [ "$GIMP_VERSION" = "3" ]; then \
         echo 'deb http://deb.debian.org/debian trixie main' > /etc/apt/sources.list.d/trixie.list \
         && printf 'Package: *\nPin: release n=trixie\nPin-Priority: 100\n' > /etc/apt/preferences.d/trixie; \
@@ -25,28 +24,26 @@ RUN if [ "$GIMP_VERSION" = "3" ]; then \
 ENV DEVKITPRO=/opt/devkitpro
 ENV PORTLIBS_PREFIX=${DEVKITPRO}/portlibs/switch
 
-# libusbhsfs GPL builds require the official devkitPro filesystem portlibs.
 RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
 
-# Build libusbhsfs from the user's fork/main. This is the latest code they forked,
-# including the post-0.2.10 NTFS path-normalization fix.
-# Build GPL explicitly: this enables the NTFS and EXT source trees.
+# Build the user's libusbhsfs fork with GPL support. Patch only the GCC-16
+# release-build warning in upstream source; do not alter runtime behavior.
 RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
+    && sed -i '/max_burst++;$/a\\        (void)max_burst;' source/usbhsfs_drive.c \
     && source ${DEVKITPRO}/switchvars.sh \
     && make clean \
     && make BUILD_TYPE=GPL \
-    && test -n "$(nm -g lib/libusbhsfs.a | grep -E 'ntfs(dev)?_|ntfs_')" \
+    && test -s lib/libusbhsfs.a \
+    && ar t lib/libusbhsfs.a | grep -q '^ntfs.*\\.o$' \
     && make BUILD_TYPE=GPL install \
     && rm -rf /tmp/libusbhsfs
 
-# Build libsmb2
 RUN git clone --depth 1 https://github.com/sahlberg/libsmb2.git /tmp/libsmb2 \
     && cd /tmp/libsmb2 \
     && make -f Makefile.platform switch_install \
     && rm -rf /tmp/libsmb2
 
-# Build libnfs v5.0.2
 COPY misc/libnfs/switch.patch /tmp/libnfs-switch.patch
 RUN wget -qO- https://github.com/sahlberg/libnfs/archive/refs/tags/libnfs-5.0.2.tar.gz | tar xz -C /tmp \
     && cd /tmp/libnfs-libnfs-5.0.2 \
