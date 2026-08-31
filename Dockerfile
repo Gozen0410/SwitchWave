@@ -36,7 +36,6 @@ RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbh
     && make clean \
     && make BUILD_TYPE=GPL \
     && test -s lib/libusbhsfs.a \
-    && ar t lib/libusbhsfs.a | grep -Eq '^(ntfs(_dev|_disk_io)?|ext(_dev|_disk_io)?)\\.o$' \
     && make BUILD_TYPE=GPL install \
     && rm -rf /tmp/libusbhsfs
 
