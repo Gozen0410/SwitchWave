@@ -25,8 +25,11 @@ RUN if [ "$GIMP_VERSION" = "3" ]; then \
 ENV DEVKITPRO=/opt/devkitpro
 ENV PORTLIBS_PREFIX=${DEVKITPRO}/portlibs/switch
 
+# libusbhsfs 0.2.10 GPL builds require the official devkitPro filesystem portlibs.
+RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
+
 # Build libusbhsfs (GPL)
-RUN git clone --depth 1 https://github.com/DarkMatterCore/libusbhsfs.git /tmp/libusbhsfs \
+RUN git clone --depth 1 --branch v0.2.10 https://github.com/DarkMatterCore/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
     && source ${DEVKITPRO}/switchvars.sh \
     && make BUILD_TYPE=gpl install \
