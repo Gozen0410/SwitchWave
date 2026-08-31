@@ -26,9 +26,11 @@ ENV PORTLIBS_PREFIX=${DEVKITPRO}/portlibs/switch
 
 RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
 
-# Build the user's libusbhsfs fork with GPL support. Apply the small GCC-16
-# compatibility fix from the build environment to upstream v0.2.10 code.
-# Rebuild trigger: test release libusbhsfs with the fork's -Og configuration.
+# Build the user's libusbhsfs fork with GPL support. The fork's Makefile
+# already uses -Og for both release and debug builds. Apply the GCC-16
+# compatibility fix, then install the built library/header files directly.
+# Do not use `make install`: its dist-bin prerequisite expects example NROs
+# that are not produced by this build and causes the Docker build to fail.
 RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
     && sed -i '/max_burst++;/s/^[[:space:]]*//' source/usbhsfs_drive.c \
@@ -37,7 +39,10 @@ RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbh
     && make clean \
     && make BUILD_TYPE=GPL \
     && test -s lib/libusbhsfs.a \
-    && make BUILD_TYPE=GPL install \
+    && test -s lib/libusbhsfsd.a \
+    && mkdir -p "${PORTLIBS_PREFIX}/include" "${PORTLIBS_PREFIX}/lib" \
+    && cp -a include/. "${PORTLIBS_PREFIX}/include/" \
+    && cp -a lib/libusbhsfs.a lib/libusbhsfsd.a "${PORTLIBS_PREFIX}/lib/" \
     && rm -rf /tmp/libusbhsfs
 
 RUN git clone --depth 1 https://github.com/sahlberg/libsmb2.git /tmp/libsmb2 \
