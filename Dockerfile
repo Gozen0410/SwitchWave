@@ -28,6 +28,7 @@ RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
 
 # Build the user's libusbhsfs fork with GPL support. Apply the small GCC-16
 # compatibility fix from the build environment to upstream v0.2.10 code.
+# Rebuild trigger: test release libusbhsfs with the fork's -Og configuration.
 RUN git clone --depth 1 https://github.com/Gozen0410/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
     && sed -i '/max_burst++;/s/^[[:space:]]*//' source/usbhsfs_drive.c \
