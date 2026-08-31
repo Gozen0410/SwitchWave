@@ -29,8 +29,13 @@ ENV PORTLIBS_PREFIX=${DEVKITPRO}/portlibs/switch
 RUN dkp-pacman -Syu --noconfirm switch-ntfs-3g switch-lwext4
 
 # Build libusbhsfs (GPL)
+# v0.2.10 has a release-build warning with GCC 16: max_burst is only consumed
+# by the debug logging macro, so GCC reports it as unused-but-set in release mode.
+# Keep the upstream code intact and explicitly mark the value as intentionally
+# unused when logging is compiled out.
 RUN git clone --depth 1 --branch v0.2.10 https://github.com/DarkMatterCore/libusbhsfs.git /tmp/libusbhsfs \
     && cd /tmp/libusbhsfs \
+    && sed -i '/max_burst++;/a\        (void)max_burst;' source/usbhsfs_drive.c \
     && source ${DEVKITPRO}/switchvars.sh \
     && make BUILD_TYPE=gpl install \
     && rm -rf /tmp/libusbhsfs
