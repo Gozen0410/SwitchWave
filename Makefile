@@ -12,20 +12,20 @@ FFMPEG_CONFIG           :=  --enable-asm \
                             --enable-gpl \
                             --enable-nvtegra \
                             --enable-static --disable-shared \
-							--enable-libdav1d --enable-libwebp \
+                            --enable-libdav1d --enable-libwebp \
                             --enable-zlib --enable-bzlib \
-							--enable-libass --enable-libfreetype --enable-libfribidi \
+                            --enable-libass --enable-libfreetype --enable-libfribidi \
                             --disable-doc --disable-programs \
-							--disable-encoders --enable-encoder=mjpeg,png,libwebp \
-							--disable-muxers \
-							--target-os=horizon --enable-cross-compile \
+                            --disable-encoders --enable-encoder=mjpeg,png,libwebp \
+                            --disable-muxers \
+                            --target-os=horizon --enable-cross-compile \
                             --cross-prefix=aarch64-none-elf- --arch=aarch64 --cpu=cortex-a57 --enable-neon \
                             --enable-mbedtls --enable-version3 \
                             --enable-pic --disable-autodetect --disable-runtime-cpudetect --disable-debug
 
 MPV_CONFIG              :=  --enable-libmpv-static --disable-libmpv-shared --disable-manpage-build \
                             --disable-cplayer --disable-iconv --disable-lua \
-							--disable-sdl2 --disable-gl --disable-plain-gl --enable-hos-audio --enable-deko3d
+                            --disable-sdl2 --disable-gl --disable-plain-gl --enable-hos-audio --enable-deko3d
 
 TOPDIR                  ?=  $(CURDIR)
 
@@ -43,7 +43,7 @@ LIBDIRS                 :=  $(INSTALL)
 
 DEFINES                 :=  __SWITCH__ _GNU_SOURCE _POSIX_VERSION=200809L timegm=mktime \
                             APP_TITLE=\"$(APP_TITLE)\" APP_VERSION=\"$(APP_VERSION)-$(shell git rev-parse --short HEAD)\" \
-							IMGUI_ENABLE_FREETYPE IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+                            IMGUI_ENABLE_FREETYPE IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
 ARCH                    :=  -march=armv8-a -mtune=cortex-a57 -mtp=soft -fpie -fPIC
 FLAGS                   :=  -O2 -g -Wall -Wextra -pipe -ffunction-sections -fdata-sections \
                             -Wno-unused-parameter -Wno-missing-field-initializers
@@ -51,7 +51,7 @@ CFLAGS                  :=  -std=gnu11
 CXXFLAGS                :=  -std=gnu++23
 ASFLAGS                 :=
 LDFLAGS                 :=  -g -Wl,--gc-sections -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs
-LINKS                   :=  -lusbhsfsd -lntfs-3g -llwext4 -ldeko3d -lnx
+LINKS                   :=  -lusbhsfs -lntfs-3g -llwext4 -ldeko3d -lnx
 PREFIX                  :=  aarch64-none-elf-
 
 # -----------------------------------------------
@@ -70,7 +70,7 @@ export AR               :=  $(PREFIX)ar
 export LD               :=  $(PREFIX)g++
 export NM               :=  $(PREFIX)nm
 export PKG_CONFIG       :=  pkg-config
-export SHELL            :=  env PATH=$(PATH) PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(SHELL)
+export SHELL             :=  env PATH=$(PATH) PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(SHELL)
 
 OUTPUT                  :=  $(BUILD)/$(TARGET).nro
 ELF_TARGET              :=  $(BUILD)/$(TARGET)
@@ -238,7 +238,7 @@ $(DIST_TARGET): $(OUTPUT)
 	@cp misc/mpv.conf $(DIST_FOLDER)
 	@cd $(BUILD)/dist; zip -r $(TOPDIR)/$@ . >/dev/null; cd $(TOPDIR)
 	@rm -rf $(BUILD)/dist
-	@echo Compressed release to $@
+	@echo Compressed release to $(DIST_TARGET)
 
 clean:
 	@echo Cleaning...
